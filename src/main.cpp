@@ -13,8 +13,8 @@
 #include "lwip/sockets.h"
 
 #include <blink.h>
-#include <wifi_example.h>
 #include <tcp_client.h>
+#include "WiFi.h"
 
 #ifdef __cplusplus 
 extern "C"{
@@ -24,8 +24,9 @@ extern "C"{
 void app_main() {
     ten_blink();
     printf("Tring to connect to wifi......");
-    wifi_example_connect();
 
+    WiFi My_Wifi_connection;
+    My_Wifi_connection.connectAP("BEENETIC_ADSL","CairZigWatt2010");
     xTaskCreate(tcp_client_task, "tcp_client", 4096, NULL, 5, NULL);
 
 }

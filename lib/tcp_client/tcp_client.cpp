@@ -42,6 +42,9 @@
 static const char *TAG = "example";
 static const char *payload = "Message from ESP32 ";
 
+// extern int CONNECTED_BIT;
+// extern EventGroupHandle_t wifi_event_group;
+
 void tcp_client_task(void *pvParameters)
 {
     char rx_buffer[128];
@@ -76,6 +79,8 @@ void tcp_client_task(void *pvParameters)
         }
         ESP_LOGI(TAG, "Socket created, connecting to %s:%d", host_ip, PORT);
 
+        // xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT, false, true, portMAX_DELAY);
+
         int err = connect(sock, (struct sockaddr *)&dest_addr, sizeof(struct sockaddr_in6));
         if (err != 0) {
             ESP_LOGE(TAG, "Socket unable to connect: errno %d", errno);
@@ -89,6 +94,8 @@ void tcp_client_task(void *pvParameters)
             if (err < 0) {
                 ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
                 break;
+            } else {
+                ESP_LOGI(TAG,"Notification sent");
             }
 
             int len = recv(sock, rx_buffer, sizeof(rx_buffer) - 1, 0);

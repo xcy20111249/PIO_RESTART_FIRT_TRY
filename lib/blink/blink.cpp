@@ -19,7 +19,6 @@
 */
 
 #define BLINK_GPIO GPIO_NUM_13
-#define DOUBLE_BLINK_GPIO GPIO_NUM_2
 
 
 
@@ -48,15 +47,15 @@ void blink()
 
 void double_blink()
 {
-    gpio_pad_select_gpio(DOUBLE_BLINK_GPIO);
+    gpio_pad_select_gpio(BLINK_GPIO);
     /* Set the GPIO as a push/pull output */
-    gpio_set_direction(DOUBLE_BLINK_GPIO, GPIO_MODE_OUTPUT);
+    gpio_set_direction(BLINK_GPIO, GPIO_MODE_OUTPUT);
     for (int i=0; i<2; ++i) {
         /* Blink off (output low) */
-        gpio_set_level(DOUBLE_BLINK_GPIO, 0);
+        gpio_set_level(BLINK_GPIO, 0);
         vTaskDelay(500 / portTICK_PERIOD_MS);
         /* Blink on (output high) */
-        gpio_set_level(DOUBLE_BLINK_GPIO, 1);
+        gpio_set_level(BLINK_GPIO, 1);
         vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }
