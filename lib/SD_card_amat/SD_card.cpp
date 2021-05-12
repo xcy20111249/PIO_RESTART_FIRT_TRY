@@ -1,5 +1,5 @@
 // #include 
-// #include 
+#include <string>
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_vfs_fat.h"
@@ -15,13 +15,15 @@
 
 //#include "interface_rtc.h"
 
+#include "freertos/task.h"
+#include "freertos/FreeRTOS.h"
 
 STU_HIS sensor_data;
 
 static const char *TAG = "sd_card";
 
 
- #define USE_SPI_MODE
+#define USE_SPI_MODE
 
 
 // 定义 SPI 的io
@@ -32,13 +34,17 @@ static const char *TAG = "sd_card";
 // #define PIN_NUM_CLK    18//14
 // #define PIN_NUM_CS     5//  13
 
-#define PIN_NUM_MISO   GPIO_NUM_19 
-#define PIN_NUM_MOSI   GPIO_NUM_23
-#define PIN_NUM_CLK    GPIO_NUM_18
-#define PIN_NUM_CS     GPIO_NUM_5
+// #define PIN_NUM_MISO   GPIO_NUM_19 
+// #define PIN_NUM_MOSI   GPIO_NUM_23
+// #define PIN_NUM_CLK    GPIO_NUM_18
+// #define PIN_NUM_CS     GPIO_NUM_5
+//这里的针脚信息是用来配置已过时的结构体的
 
 #endif 
 
+//declear semaphore for log and json file
+QueueHandle_t semaphore_log = NULL;
+QueueHandle_t semaphore_json = NULL;
 
 static uint8_t is_init_sd_card_failed = 0; // 初始化sd 卡成
 
@@ -46,7 +52,7 @@ static uint8_t is_init_sd_card_failed = 0; // 初始化sd 卡成
 uint32_t sd_card_capacity_MB = 0; // 容量  单位为 ：MB
 
 // sd_card_init 的初始化---------------
- uint8_t  sd_card_init(void)
+uint8_t  sd_card_init(void)
 {
 
     ESP_LOGI(TAG, "Using SPI peripheral");
@@ -55,10 +61,10 @@ uint32_t sd_card_capacity_MB = 0; // 容量  单位为 ：MB
     sdspi_device_config_t device_config = SDSPI_DEVICE_CONFIG_DEFAULT();
 
     //根据具体卡的信息分配引脚
-    /*device_config.host_id = PIN_NUM_MISO;
-    device_config.gpio_cs = PIN_NUM_MOSI;
-    device_config.gpio_cd  = PIN_NUM_CLK;
-    device_config.gpio_wp   = PIN_NUM_CS;
+    /*device_config.host_id = 
+    device_config.gpio_cs = 
+    device_config.gpio_cd  = 
+    device_config.gpio_wp   = 
     device_config.gpio_int = */
 
     esp_vfs_fat_sdmmc_mount_config_t mount_config = 
@@ -95,6 +101,9 @@ uint32_t sd_card_capacity_MB = 0; // 容量  单位为 ：MB
     sd_card_capacity_MB = ((uint64_t) card->csd.capacity) * card->csd.sector_size / (1024 * 1024);
     ESP_LOGE(TAG, "sd capatiy %d",sd_card_capacity_MB);
 
+    semaphore_log = xSemaphoreCreateBinary();
+    semaphore_json = xSemaphoreCreateBinary();
+
     return ret;
 
 }
@@ -106,12 +115,23 @@ static void reset_sd_card(void)
 
 	 for(i=0;i>3;i++)
 	 {
-		delay_ms(100);
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
 		if(sd_card_init())
 		{
 			break;
 		}
 	 }
+}
+
+int sd_card_dlog(std::string text){
+    if(xSemaphoreTake(semaphore_log, 2000 / portTICK_PERIOD_MS)==pdTRUE){
+        
+        
+        return DLOG_OK;
+    }else{
+        ESP_LOGE(TAG,"Unable to get semaphore_log, data logging failed.");
+        return SEMA_LOG_FAIL;
+    }
 }
 
 // 比较两个数的大小
@@ -124,7 +144,7 @@ static uint16_t chg_2_int16(int16_t a,int16_t b)
 // **检查还剩余的文件大小**
 void check_file_size(void)
 {
-    struct  stat st;
+    struct  stat_t st;
     long sd_file_size =0;
 
     stat("/sdcard/sensor.txt",&st);

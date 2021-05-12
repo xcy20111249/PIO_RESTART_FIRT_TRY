@@ -13,21 +13,31 @@
 #include "lwip/sockets.h"
 
 #include <blink.h>
-#include <tcp_client.h>
+#include <tcp_client_socket.h>
 #include "WiFi.h"
+#include "mqtt_client_tcp.h"
 
 #ifdef __cplusplus 
 extern "C"{
 #endif
 
+void restart_tcp_socket (){
+
+}
 
 void app_main() {
+
+    ESP_ERROR_CHECK(nvs_flash_init());
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+
     ten_blink();
     printf("Tring to connect to wifi......");
 
     WiFi My_Wifi_connection;
-    My_Wifi_connection.connectAP("BEENETIC_ADSL","CairZigWatt2010");
-    xTaskCreate(tcp_client_task, "tcp_client", 4096, NULL, 5, NULL);
+    My_Wifi_connection.connectAP("BEENETIC_FIBRE","CairZigWatt2010");
+    //xTaskCreate(tcp_client_task, "tcp_client_socket", 4096, NULL, 5, NULL);
+    mqtt_app_start();
 
 }
 

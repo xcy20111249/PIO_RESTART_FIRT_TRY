@@ -1,9 +1,8 @@
 #ifndef sd_card_h_
 #define sd_card_h_
 
-#include 
-#include 
-
+#define SEMA_LOG_FAIL 1
+#define DLOG_OK 0
 
 // 传感器数据结构体，要存数据
 typedef struct
