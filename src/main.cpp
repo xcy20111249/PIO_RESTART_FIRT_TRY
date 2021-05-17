@@ -16,6 +16,7 @@
 #include <tcp_client_socket.h>
 #include "WiFi.h"
 #include "mqtt_client_tcp.h"
+#include "sd_card_my.h"
 
 #ifdef __cplusplus 
 extern "C"{
@@ -38,6 +39,9 @@ void app_main() {
     My_Wifi_connection.connectAP("BEENETIC_FIBRE","CairZigWatt2010");
     //xTaskCreate(tcp_client_task, "tcp_client_socket", 4096, NULL, 5, NULL);
     mqtt_app_start();
+
+    sd_card_init();
+    sd_card_dlog_comm("test");
 
 }
 

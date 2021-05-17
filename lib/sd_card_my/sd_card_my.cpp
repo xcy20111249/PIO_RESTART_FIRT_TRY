@@ -12,6 +12,8 @@
 #include <sys/stat.h>
 #include <iostream>
 #include <fstream>
+#include <sstream>
+#include <streambuf>
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_vfs_fat.h"
@@ -27,15 +29,11 @@
 #include "driver/sdmmc_host.h"
 #endif
 
-static const char *TAG = "sd_card_my";
-
-#define MOUNT_POINT "/sdcard"
-
 // This example can use SDMMC and SPI peripherals to communicate with SD card.
 // By default, SDMMC peripheral is used.
 // To enable SPI mode, uncomment the following line:
 
-// #define USE_SPI_MODE
+#define USE_SPI_MODE
 
 // ESP32-S2 doesn't have an SD Host peripheral, always use SPI:
 #ifdef CONFIG_IDF_TARGET_ESP32S2
@@ -129,17 +127,17 @@ uint32_t sd_card_init(void){
         .quadhd_io_num = -1,
         .max_transfer_sz = 4000,
     };
-    ret = spi_bus_initialize(host.slot, &bus_cfg, SPI_DMA_CHAN);
+    ret = spi_bus_initialize(SPI2_HOST, &bus_cfg, SPI_DMA_CHAN);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to initialize bus.");
-        return;
+        return 0;
     }
 
     // This initializes the slot without card detect (CD) and write protect (WP) signals.
     // Modify slot_config.gpio_cd and slot_config.gpio_wp if your board has these signals.
     sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
-    slot_config.gpio_cs = PIN_NUM_CS;
-    slot_config.host_id = host.slot;
+    slot_config.gpio_cs = (gpio_num_t)PIN_NUM_CS;
+    slot_config.host_id = SPI2_HOST;
 
     ret = esp_vfs_fat_sdspi_mount(mount_point, &host, &slot_config, &mount_config, &card);
 #endif //USE_SPI_MODE
@@ -190,10 +188,30 @@ int sd_card_dlog_comm(std::string text){
         return SEMA_LOG_FAIL;
     }
 }
+/*
+std::string sd_card_json_tostring(std::string jsonpath){
+    if(xSemaphoreTake(semaphore_json, 2000 / portTICK_PERIOD_MS)==pdTRUE){
+        std::fstream jsonfile;
+        std::stringstream ss;
+        jsonfile.open("imeds-distrib.json"); 
+        ss<<jsonfile.rdbuf();
+        jsonfile.close();
+        std::string jsonfile_cont = ss.str();
+
+        ESP_LOGI(TAG, "Read json file success.");
+        return jsonfile_cont;
+    }else{
+        ESP_LOGE(TAG,"Unable to get semaphore_json, json reading failed.");
+        throw SD_CARD_READ_FAILED;
+    }
+}
+*/
+// int sd_card_string_tojson(std::string jsontext){
+    
+// }
 
 
-
-
+/*
 void app_main(void)
 {
 
@@ -248,3 +266,4 @@ void app_main(void)
     spi_bus_free(host.slot);
 #endif
 }
+*/
